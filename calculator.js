@@ -404,31 +404,75 @@ const Calculator = () => {
       ),
       React.createElement('div', { className: "bg-white border border-gray-200 rounded-lg p-6" },
         React.createElement('h3', { className: "text-lg font-semibold mb-4 text-gray-800" },
-          "Projektionsdata (første 12 måneder)"
+          "Omsætningsprojektion med voksende abonnementsydelser"
         ),
-        React.createElement('div', { className: "overflow-x-auto" },
-          React.createElement('table', { className: "w-full text-sm" },
-            React.createElement('thead', {},
-              React.createElement('tr', { className: "border-b" },
-                React.createElement('th', { className: "text-left p-2" }, "Måned"),
-                React.createElement('th', { className: "text-right p-2" }, "Total Omsætning"),
-                React.createElement('th', { className: "text-right p-2" }, "Nødvendig"),
-                React.createElement('th', { className: "text-right p-2" }, "Status")
-              )
-            ),
-            React.createElement('tbody', {},
-              projectionData.slice(0, 12).map((item, index) =>
-                React.createElement('tr', { key: index, className: "border-b" },
-                  React.createElement('td', { className: "p-2" }, item.month),
-                  React.createElement('td', { className: "text-right p-2 font-medium" }, formatCurrency(item.totalOmsaetning)),
-                  React.createElement('td', { className: "text-right p-2" }, formatCurrency(item.noedvendigOmsaetning)),
-                  React.createElement('td', { className: "text-right p-2" },
-                    React.createElement('span', { 
-                      className: item.totalOmsaetning >= item.noedvendigOmsaetning ? "text-green-600" : "text-red-600"
-                    }, item.totalOmsaetning >= item.noedvendigOmsaetning ? "✓" : "✗")
-                  )
-                )
-              )
+        React.createElement('div', { className: "h-96" },
+          React.createElement(Recharts.ResponsiveContainer, { width: "100%", height: "100%" },
+            React.createElement(Recharts.LineChart, { data: projectionData },
+              React.createElement(Recharts.CartesianGrid, { strokeDasharray: "3 3" }),
+              React.createElement(Recharts.XAxis, { 
+                dataKey: "month",
+                angle: -45,
+                textAnchor: "end",
+                height: 80,
+                interval: Math.floor(projectionMonths / 12)
+              }),
+              React.createElement(Recharts.YAxis, { 
+                tickFormatter: (value) => `${Math.round(value / 1000)}k kr.`
+              }),
+              React.createElement(Recharts.Tooltip, { 
+                formatter: (value, name) => [
+                  formatCurrency(value), 
+                  name === 'totalOmsaetning' ? 'Total Omsætning' :
+                  name === 'noedvendigOmsaetning' ? 'Nødvendig Omsætning (Løn + Profit)' :
+                  'Minimumskrav (Kun løn + omkostninger)'
+                ],
+                labelFormatter: (label, payload) => {
+                  if (payload && payload.length > 0) {
+                    const data = payload[0].payload;
+                    return React.createElement('div', {},
+                      React.createElement('div', { className: "font-medium" }, label),
+                      React.createElement('div', { className: "text-sm text-gray-600 mt-1" },
+                        React.createElement('div', {}, `Vedligeholdelsesaftaler: ${data.vedligeholdelsesaftaler?.toFixed(1) || 0}`),
+                        React.createElement('div', {}, `Hostingkunder: ${data.hostingkunder?.toFixed(1) || 0}`),
+                        React.createElement('div', {}, `SEO aftaler: ${data.seoAftaler?.toFixed(1) || 0}`),
+                        React.createElement('div', {}, `Google Ads aftaler: ${data.googleAdsAftaler?.toFixed(1) || 0}`),
+                        React.createElement('div', {}, `Konsulenttimer: ${data.konsulentTimer?.toFixed(1) || 0}`)
+                      )
+                    );
+                  }
+                  return label;
+                }
+              }),
+              React.createElement(Recharts.Legend, { 
+                formatter: (value) => 
+                  value === 'totalOmsaetning' ? 'Total Omsætning' :
+                  value === 'noedvendigOmsaetning' ? 'Nødvendig Omsætning (Løn + Profit)' :
+                  'Minimumskrav (Kun løn + omkostninger)'
+              }),
+              React.createElement(Recharts.Line, { 
+                type: "monotone",
+                dataKey: "totalOmsaetning",
+                stroke: "#2563eb",
+                strokeWidth: 3,
+                dot: { fill: '#2563eb', strokeWidth: 2, r: 4 }
+              }),
+              React.createElement(Recharts.Line, { 
+                type: "monotone",
+                dataKey: "noedvendigOmsaetning",
+                stroke: "#dc2626",
+                strokeWidth: 2,
+                strokeDasharray: "5 5",
+                dot: { fill: '#dc2626', strokeWidth: 2, r: 3 }
+              }),
+              React.createElement(Recharts.Line, { 
+                type: "monotone",
+                dataKey: "minimumskrav",
+                stroke: "#f59e0b",
+                strokeWidth: 2,
+                strokeDasharray: "10 5",
+                dot: { fill: '#f59e0b', strokeWidth: 2, r: 3 }
+              })
             )
           )
         )
